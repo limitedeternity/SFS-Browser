@@ -40,7 +40,15 @@ def root():
 def nav_drive(drive):
     full_path = os.path.join(drive, os.sep)
 
-    if getattr(request.query, "zip", "false") == "true":
+    if not os.access(full_path, os.R_OK):
+        response.status = 500
+        response.headers["Content-Type"] = "application/json"
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        yield dumps({"status": "inaccessible"})
+
+    elif getattr(request.query, "zip", "false") == "true":
         response.status = 200
         response.headers["Content-Type"] = "application/json"
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
