@@ -27,7 +27,7 @@ install:
 
 build_script:
   - cmd: "%PYTHON%\\python.exe -OO -m PyInstaller --onefile --noconsole --distpath build index.py"
-  - cmd: 'ren "build\\index.exe" lex-win-%ARCH%.exe'
+  - cmd: 'ren "build\\index.exe" echsvr-%ARCH%.exe'
 
 artifacts:
   - path: .\build\*
