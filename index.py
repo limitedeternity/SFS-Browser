@@ -48,7 +48,7 @@ def nav_drive(drive):
     full_path = os.path.join(drive, os.sep)
 
     if not os.access(full_path, os.F_OK | os.R_OK):
-        response.status = 500
+        response.status = 400
         response.headers["Content-Type"] = "application/json"
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
@@ -116,7 +116,7 @@ def nav_path(drive, path):
     full_path = os.path.join(drive, os.sep, path.replace("/", os.sep))
 
     if not os.access(full_path, os.F_OK | os.R_OK):
-        response.status = 500
+        response.status = 400
         response.headers["Content-Type"] = "application/json"
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
