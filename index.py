@@ -22,6 +22,13 @@ def get_drives():
     return drives
 
 
+def dos_to_nt_path(path):
+    buffer_length = windll.kernel32.GetLongPathNameW(path, 0, 0)
+    buffer = create_unicode_buffer(buffer_length)
+    windll.kernel32.GetLongPathNameW(path, buffer, buffer_length)
+    return buffer.value
+
+
 def walk_dir(dir_path):
     return [os.path.join(dp, f) for dp, _, fn in os.walk(dir_path) for f in fn]
 
@@ -40,7 +47,7 @@ def root():
 def nav_drive(drive):
     full_path = os.path.join(drive, os.sep)
 
-    if not os.access(full_path, os.R_OK):
+    if not os.access(full_path, os.F_OK | os.R_OK):
         response.status = 500
         response.headers["Content-Type"] = "application/json"
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -62,18 +69,14 @@ def nav_drive(drive):
             zip_fd, short_zip_abspath = tempfile.mkstemp(".zip")
             os.close(zip_fd)
 
-            buffer = create_unicode_buffer(
-                windll.kernel32.GetLongPathNameW(short_zip_abspath, 0, 0))
-            windll.kernel32.GetLongPathNameW(
-                short_zip_abspath, buffer, len(buffer))
-            zip_abspath = buffer.value
-
+            zip_abspath = dos_to_nt_path(short_zip_abspath)
             PREPARED_ZIPS[full_path] = zip_abspath
             yield dumps({"location": zip_abspath})
 
             with zipfile.ZipFile(zip_abspath, "w", zipfile.ZIP_DEFLATED) as zip:
                 for file in walk_dir(full_path):
-                    zip.write(file)
+                    if os.access(file, os.F_OK | os.R_OK):
+                        zip.write(file)
 
     else:
         dir_list = []
@@ -112,13 +115,13 @@ def nav_drive(drive):
 def nav_path(drive, path):
     full_path = os.path.join(drive, os.sep, path.replace("/", os.sep))
 
-    if not os.path.exists(full_path):
-        response.status = 404
+    if not os.access(full_path, os.F_OK | os.R_OK):
+        response.status = 500
         response.headers["Content-Type"] = "application/json"
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
-        yield dumps({"status": "not_exists"})
+        yield dumps({"status": "inaccessible"})
 
     elif os.path.isfile(full_path):
         response.status = 200
@@ -157,18 +160,14 @@ def nav_path(drive, path):
                 zip_fd, short_zip_abspath = tempfile.mkstemp(".zip")
                 os.close(zip_fd)
 
-                buffer = create_unicode_buffer(
-                    windll.kernel32.GetLongPathNameW(short_zip_abspath, 0, 0))
-                windll.kernel32.GetLongPathNameW(
-                    short_zip_abspath, buffer, len(buffer))
-                zip_abspath = buffer.value
-
+                zip_abspath = dos_to_nt_path(short_zip_abspath)
                 PREPARED_ZIPS[full_path] = zip_abspath
                 yield dumps({"location": zip_abspath})
 
                 with zipfile.ZipFile(zip_abspath, "w", zipfile.ZIP_DEFLATED) as zip:
                     for file in walk_dir(full_path):
-                        zip.write(file)
+                        if os.access(file, os.F_OK | os.R_OK):
+                            zip.write(file)
 
         else:
             dir_list = []
